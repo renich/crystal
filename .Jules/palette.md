@@ -1,0 +1,3 @@
+## 2024-05-18 - Added Accessibility to Icon-Only Links in Crystal Playground
+**Learning:** Some floating action buttons and tooltipped elements in Materialize lack proper ARIA labelling out of the box in the `views/_index.html` and `views/layout.html.ecr` files. The SVG icons used inside them also were announced by screen readers if `aria-hidden` wasn't explicitly applied. Adding an empty `alt=""` for the purely decorative brand-logo image ensures clean navigation.
+**Action:** Always check links that contain ONLY SVGs/images. Add `aria-label` to the parent anchor and `aria-hidden="true"` to the decorative child SVG. Add `alt=""` to purely decorative wrapper images.
