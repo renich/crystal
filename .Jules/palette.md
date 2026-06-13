@@ -1,0 +1,3 @@
+## 2024-06-13 - Crystal Playground Icon-only Button Accessibility
+**Learning:** Materialize CSS-based icon-only buttons (using `.btn-floating`) and navigation links often use `data-tooltip` for hover context but completely lack an accessible name for screen readers. Furthermore, inline SVGs used as icons are announced confusingly by some screen readers if not explicitly hidden.
+**Action:** When adding or auditing icon-only buttons or links, always add an explicit `aria-label="[Action]"` attribute to the parent anchor or button tag, and add `aria-hidden="true"` to any purely decorative child SVG or icon element to ensure a consistent pattern across the Crystal Playground interface.
