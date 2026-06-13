@@ -466,7 +466,7 @@ module Crystal::Playground
       end
 
       client_ws = PathWebSocketHandler.new "/client" do |ws, context|
-        origin = context.request.headers["Origin"]
+        origin = context.request.headers["Origin"]?
         if !accept_request?(origin)
           Log.warn { "Invalid Request Origin: #{origin}" }
           ws.close :policy_violation, "Invalid Request Origin"
@@ -528,7 +528,7 @@ module Crystal::Playground
       raise Playground::Error.new(e.message)
     end
 
-    private def accept_request?(origin)
+    private def accept_request?(origin : String?)
       case @host
       when nil, "localhost", "127.0.0.1"
         origin.in?("http://localhost:#{@port}", "http://127.0.0.1:#{@port}")
