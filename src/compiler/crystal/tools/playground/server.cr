@@ -466,8 +466,10 @@ module Crystal::Playground
       end
 
       client_ws = PathWebSocketHandler.new "/client" do |ws, context|
-        origin = context.request.headers["Origin"]
-        if !accept_request?(origin)
+        origin = context.request.headers["Origin"]?
+        host = context.request.headers["Host"]?
+
+        if !accept_request?(origin, host)
           Log.warn { "Invalid Request Origin: #{origin}" }
           ws.close :policy_violation, "Invalid Request Origin"
         else
@@ -528,14 +530,19 @@ module Crystal::Playground
       raise Playground::Error.new(e.message)
     end
 
-    private def accept_request?(origin)
+    private def accept_request?(origin, host)
+      return false unless origin
+
       case @host
       when nil, "localhost", "127.0.0.1"
+        # Always enforce these strict origins to prevent DNS rebinding
         origin.in?("http://localhost:#{@port}", "http://127.0.0.1:#{@port}")
       when "0.0.0.0"
-        true
+        # For wildcard bind, allow if Origin exactly matches Host, preventing CSWSH
+        # but allowing access via external IPs.
+        host ? (origin == "http://#{host}" || origin == "https://#{host}") : false
       else
-        origin == "http://#{@host}:#{@port}"
+        origin == "http://#{@host}:#{@port}" || origin == "https://#{@host}:#{@port}"
       end
     end
   end
