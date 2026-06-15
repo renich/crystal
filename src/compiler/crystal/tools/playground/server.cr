@@ -449,12 +449,21 @@ module Crystal::Playground
       public_dir = File.join(playground_dir, "public")
 
       agent_ws = PathWebSocketHandler.new "/agent" do |ws, context|
-        match_data = context.request.path.not_nil!.match!(/\/(\d+)\/(\d+)$/)
+        match_data = context.request.path.not_nil!.match(/\/(\d+)\/(\d+)$/)
+        unless match_data
+          Log.warn { "Invalid agent path: #{context.request.path}" }
+          next ws.close(:policy_violation, "Invalid Path")
+        end
+
         session_key = match_data[1].to_i
         tag = match_data[2].to_i
         Log.info { "#{context.request.path} WebSocket connected (session=#{session_key}, tag=#{tag})" }
 
-        session = @sessions[session_key]
+        session = @sessions[session_key]?
+        unless session
+          Log.warn { "Unknown session key: #{session_key}" }
+          next ws.close(:policy_violation, "Unknown Session")
+        end
 
         ws.on_message do |message|
           # ignore if the session is already about another execution.
@@ -466,7 +475,7 @@ module Crystal::Playground
       end
 
       client_ws = PathWebSocketHandler.new "/client" do |ws, context|
-        origin = context.request.headers["Origin"]
+        origin = context.request.headers["Origin"]?
         if !accept_request?(origin)
           Log.warn { "Invalid Request Origin: #{origin}" }
           ws.close :policy_violation, "Invalid Request Origin"
