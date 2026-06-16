@@ -23,16 +23,9 @@ describe HTTP::StaticFileHandler do
     response.body.should eq(File.read(datapath("static_file_handler", "test.txt")))
   end
 
-  it "handles forbidden characters in windows paths" do
+  it "rejects backslashes in paths" do
     response = handle HTTP::Request.new("GET", "/foo\\bar.txt"), ignore_body: false
-    response.status_code.should eq 404
-
-    # This file can't be checkout out from git on Windows, thus we need to create it here.
-    File.touch(Path[datapath("static_file_handler"), Path.posix("back\\slash.txt")])
-    response = handle HTTP::Request.new("GET", "/back\\slash.txt"), ignore_body: false
-    response.status_code.should eq 200
-  ensure
-    File.delete(Path[datapath("static_file_handler"), Path.posix("back\\slash.txt")])
+    response.status_code.should eq 400
   end
 
   it "adds Etag header" do
@@ -509,7 +502,7 @@ describe HTTP::StaticFileHandler do
   end
 
   it "returns 400" do
-    %w(%00 test.txt%00).each do |path|
+    %w(%00 test.txt%00 %5c %5C test%5ctxt test\\txt).each do |path|
       response = handle HTTP::Request.new("GET", "/#{path}")
       response.status_code.should eq(400)
     end
