@@ -325,7 +325,16 @@ module Crystal::Playground
     def call(context)
       case {context.request.method, context.request.path}
       when {"GET", /\/workbook\/playground\/(.*)/}
-        files = Dir["playground/#{$1}.{md,html,cr}"]
+        request_path = $1
+
+        # Security: Prevent path traversal vulnerabilities
+        if request_path.includes?("..") || request_path.includes?("\0") || request_path.includes?("\\")
+          context.response.status_code = 400
+          context.response.puts "Bad Request"
+          return
+        end
+
+        files = Dir["playground/#{request_path}.{md,html,cr}"]
         if files.size > 0
           context.response.headers["Content-Type"] = "text/html"
           page = FileContentPage.new(files[0])
@@ -449,7 +458,12 @@ module Crystal::Playground
       public_dir = File.join(playground_dir, "public")
 
       agent_ws = PathWebSocketHandler.new "/agent" do |ws, context|
-        match_data = context.request.path.not_nil!.match!(/\/(\d+)\/(\d+)$/)
+        match_data = context.request.path.not_nil!.match(/\/(\d+)\/(\d+)$/)
+        if match_data.nil?
+          Log.warn { "Invalid /agent WebSocket path: #{context.request.path}" }
+          ws.close :policy_violation, "Invalid agent path"
+          next
+        end
         session_key = match_data[1].to_i
         tag = match_data[2].to_i
         Log.info { "#{context.request.path} WebSocket connected (session=#{session_key}, tag=#{tag})" }
@@ -466,7 +480,7 @@ module Crystal::Playground
       end
 
       client_ws = PathWebSocketHandler.new "/client" do |ws, context|
-        origin = context.request.headers["Origin"]
+        origin = context.request.headers["Origin"]?
         if !accept_request?(origin)
           Log.warn { "Invalid Request Origin: #{origin}" }
           ws.close :policy_violation, "Invalid Request Origin"
