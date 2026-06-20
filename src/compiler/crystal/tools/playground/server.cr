@@ -449,12 +449,23 @@ module Crystal::Playground
       public_dir = File.join(playground_dir, "public")
 
       agent_ws = PathWebSocketHandler.new "/agent" do |ws, context|
-        match_data = context.request.path.not_nil!.match!(/\/(\d+)\/(\d+)$/)
+        match_data = context.request.path.not_nil!.match(/\/(\d+)\/(\d+)$/)
+        if !match_data
+          Log.warn { "Invalid Request Path: #{context.request.path}" }
+          ws.close :policy_violation, "Invalid Request Path"
+          next
+        end
+
         session_key = match_data[1].to_i
         tag = match_data[2].to_i
         Log.info { "#{context.request.path} WebSocket connected (session=#{session_key}, tag=#{tag})" }
 
-        session = @sessions[session_key]
+        session = @sessions[session_key]?
+        if !session
+          Log.warn { "Invalid Session: #{session_key}" }
+          ws.close :policy_violation, "Invalid Session"
+          next
+        end
 
         ws.on_message do |message|
           # ignore if the session is already about another execution.
@@ -466,7 +477,7 @@ module Crystal::Playground
       end
 
       client_ws = PathWebSocketHandler.new "/client" do |ws, context|
-        origin = context.request.headers["Origin"]
+        origin = context.request.headers["Origin"]?
         if !accept_request?(origin)
           Log.warn { "Invalid Request Origin: #{origin}" }
           ws.close :policy_violation, "Invalid Request Origin"
@@ -529,6 +540,8 @@ module Crystal::Playground
     end
 
     private def accept_request?(origin)
+      return false unless origin
+
       case @host
       when nil, "localhost", "127.0.0.1"
         origin.in?("http://localhost:#{@port}", "http://127.0.0.1:#{@port}")
