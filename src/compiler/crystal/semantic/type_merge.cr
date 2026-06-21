@@ -70,9 +70,39 @@ module Crystal
 
     def compact_types(objects, &) : Array(Type)
       all_types = Array(Type).new(objects.size)
-      objects.each { |obj| add_type all_types, yield(obj) }
+      types_set = Set(Type).new
+      objects.each { |obj| add_type all_types, types_set, yield(obj) }
       all_types.reject! &.no_return? if all_types.size > 1
       all_types
+    end
+
+    def add_type(types, types_set : Set(Type), type : UnionType)
+      type.union_types.each do |subtype|
+        add_type types, types_set, subtype
+      end
+    end
+
+    def add_type(types, types_set : Set(Type), type : AliasType)
+      aliased = type.remove_alias
+      if aliased == type
+        types << type if types_set.add?(type)
+      else
+        add_type types, types_set, aliased
+      end
+    end
+
+    # When Void participates in a union, it becomes Nil
+    # (users shouldn't deal with real Void values)
+    def add_type(types, types_set : Set(Type), type : VoidType)
+      add_type(types, types_set, nil_type)
+    end
+
+    def add_type(types, types_set : Set(Type), type : Type)
+      types << type if types_set.add?(type)
+    end
+
+    def add_type(types, types_set : Set(Type), type : Nil)
+      # Nothing to do
     end
 
     def add_type(types, type : UnionType)
@@ -209,7 +239,7 @@ module Crystal
 
     def self.least_common_ancestor(
       type1 : MetaclassType | GenericClassInstanceMetaclassType,
-      type2 : MetaclassType | GenericClassInstanceMetaclassType,
+      type2 : MetaclassType | GenericClassInstanceMetaclassType
     )
       return nil unless unifiable_metaclass?(type1) && unifiable_metaclass?(type2)
 
@@ -227,7 +257,7 @@ module Crystal
 
     def self.least_common_ancestor(
       type1 : NonGenericModuleType | GenericModuleInstanceType | GenericClassType,
-      type2 : NonGenericModuleType | GenericModuleInstanceType | GenericClassType,
+      type2 : NonGenericModuleType | GenericModuleInstanceType | GenericClassType
     )
       return type2 if type1.implements?(type2)
       return type1 if type2.implements?(type1)

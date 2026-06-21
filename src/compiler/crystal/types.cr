@@ -1154,17 +1154,19 @@ module Crystal
     def including_types
       if including_types = @including_types
         all_types = Array(Type).new(including_types.size)
-        add_to_including_types(all_types)
+        types_set = Set(Type).new
+        add_to_including_types(all_types, types_set)
         program.type_merge_union_of(all_types)
       else
         nil
       end
     end
 
-    def add_to_including_types(all_types)
+    def add_to_including_types(all_types, types_set : Set(Type)? = nil)
+      types_set ||= Set(Type).new(all_types)
       if including_types = @including_types
         including_types.each do |including_type|
-          add_to_including_types(including_type, all_types)
+          add_to_including_types(including_type, all_types, types_set)
         end
       end
     end
@@ -2220,17 +2222,19 @@ module Crystal
     def including_types
       if including_types = @including_types
         all_types = Array(Type).new(including_types.size)
-        add_to_including_types(all_types)
+        types_set = Set(Type).new
+        add_to_including_types(all_types, types_set)
         program.type_merge_union_of(all_types)
       else
         nil
       end
     end
 
-    def add_to_including_types(all_types)
+    def add_to_including_types(all_types, types_set : Set(Type)? = nil)
+      types_set ||= Set(Type).new(all_types)
       if including_types = @including_types
         including_types.each do |including_type|
-          add_to_including_types(including_type, all_types)
+          add_to_including_types(including_type, all_types, types_set)
         end
       end
     end
@@ -3554,6 +3558,34 @@ module Crystal
     def type_desc
       "metaclass"
     end
+  end
+end
+
+private def add_to_including_types(type : Crystal::GenericType, all_types, types_set : Set(Type))
+  type.each_instantiated_type do |instance|
+    # Unbound generic types are not concrete types
+    next if instance.unbound?
+
+    # Abstract types also shouldn't form the union of including types
+    next if instance.abstract?
+
+    if types_set.add?(instance)
+      all_types << instance
+    end
+  end
+  type.subclasses.each do |subclass|
+    add_to_including_types subclass, all_types, types_set
+  end
+end
+
+private def add_to_including_types(type : Crystal::NonGenericModuleType | Crystal::GenericModuleInstanceType, all_types, types_set : Set(Type))
+  type.add_to_including_types(all_types, types_set)
+end
+
+private def add_to_including_types(type, all_types, types_set : Set(Type))
+  virtual_type = type.virtual_type
+  if types_set.add?(virtual_type)
+    all_types << virtual_type
   end
 end
 
