@@ -89,6 +89,11 @@ class HTTP::StaticFileHandler
       return false
     end
 
+    if request_path.includes? '\\'
+      context.response.respond_with_status(:bad_request)
+      return false
+    end
+
     true
   end
 
