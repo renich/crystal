@@ -70,14 +70,36 @@ module Crystal
 
     def compact_types(objects, &) : Array(Type)
       all_types = Array(Type).new(objects.size)
-      objects.each { |obj| add_type all_types, yield(obj) }
+      if objects.size > 15
+        all_types_set = Set(Type).new
+        objects.each { |obj| add_type all_types, all_types_set, yield(obj) }
+      else
+        objects.each { |obj| add_type all_types, yield(obj) }
+      end
       all_types.reject! &.no_return? if all_types.size > 1
       all_types
+    end
+
+    def add_type(types, types_set : Set(Type), type : UnionType)
+      type.union_types.each do |subtype|
+        add_type types, types_set, subtype
+      end
     end
 
     def add_type(types, type : UnionType)
       type.union_types.each do |subtype|
         add_type types, subtype
+      end
+    end
+
+    def add_type(types, types_set : Set(Type), type : AliasType)
+      aliased = type.remove_alias
+      if aliased == type
+        if types_set.add?(type)
+          types << type
+        end
+      else
+        add_type types, types_set, aliased
       end
     end
 
@@ -92,12 +114,26 @@ module Crystal
 
     # When Void participates in a union, it becomes Nil
     # (users shouldn't deal with real Void values)
+    def add_type(types, types_set : Set(Type), type : VoidType)
+      add_type(types, types_set, nil_type)
+    end
+
     def add_type(types, type : VoidType)
       add_type(types, nil_type)
     end
 
+    def add_type(types, types_set : Set(Type), type : Type)
+      if types_set.add?(type)
+        types << type
+      end
+    end
+
     def add_type(types, type : Type)
       types << type unless types.includes? type
+    end
+
+    def add_type(types, types_set : Set(Type), type : Nil)
+      # Nothing to do
     end
 
     def add_type(set, type : Nil)

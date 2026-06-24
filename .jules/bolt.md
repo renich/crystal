@@ -1,0 +1,3 @@
+## 2024-05-18 - Optimized Array membership check with Set in TypeMerge
+**Learning:** During semantic analysis, checking for type uniqueness across arrays with `array.includes?(item)` operates in O(N^2) time complexity. Using `Set(Type)` tracks membership in O(1) time alongside the array (which must remain in use to guarantee insertion order).
+**Action:** Always prefer `Set#add?` alongside an `Array` over `Array#includes?` when tracking uniquely occurring items during parsing, semantic analysis, or data manipulation steps that handle many elements, preventing quadratic time performance degradation.
