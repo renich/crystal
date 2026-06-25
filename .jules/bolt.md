@@ -1,0 +1,3 @@
+## 2024-05-19 - Fast Type Deduplication
+**Learning:** Crystal's compiler has critical hot paths merging Types (in `type_merge.cr`). `Array#includes?` creates an O(N^2) bottleneck when unions or arrays grow moderately large, but unconditionally allocating a `Set` for deduplication introduces noticeable object allocation overhead for the very common small collections (size <= 15).
+**Action:** When tracking unique objects in compiler hot paths, conditionally instantiate a `Set` only when `array.size > 15`, keeping O(N^2) for very small N (where constant overhead dominates), and reducing algorithmic complexity to O(N) when N grows.
