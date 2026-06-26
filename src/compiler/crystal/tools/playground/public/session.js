@@ -59,8 +59,8 @@ Playground.RunButtons = function(options) {
   var buildAnchor = function(tooltip, octicon) {
     return $("<a>").addClass("run-button btn-floating btn-large waves-effect waves-light tooltipped")
       .attr("href", "#")
-      .attr("data-position", "left").attr("data-delay", "50").attr("data-tooltip", tooltip)
-      .append(`<svg viewBox="0 0 16 16" class="mega-octicon"><use xlink:href="/vendor/octicons-19.5.0/octicons.svg#${octicon}-16"></use></svg>`);
+      .attr("data-position", "left").attr("data-delay", "50").attr("data-tooltip", tooltip).attr("aria-label", tooltip)
+      .append(`<svg viewBox="0 0 16 16" class="mega-octicon" aria-hidden="true"><use xlink:href="/vendor/octicons-19.5.0/octicons.svg#${octicon}-16"></use></svg>`);
   }
 
   var buildProgress = function() {
