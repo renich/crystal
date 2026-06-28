@@ -70,7 +70,15 @@ module Crystal
 
     def compact_types(objects, &) : Array(Type)
       all_types = Array(Type).new(objects.size)
-      objects.each { |obj| add_type all_types, yield(obj) }
+      # Optimization: For large arrays of types, using array.includes? creates an O(N^2)
+      # performance bottleneck. Here we use a Set to track membership in O(1) time
+      # if the object array is large enough (> 15) to offset the allocation overhead.
+      if objects.size > 15
+        set = Set(Type).new(objects.size)
+        objects.each { |obj| add_type all_types, set, yield(obj) }
+      else
+        objects.each { |obj| add_type all_types, yield(obj) }
+      end
       all_types.reject! &.no_return? if all_types.size > 1
       all_types
     end
@@ -101,6 +109,37 @@ module Crystal
     end
 
     def add_type(set, type : Nil)
+      # Nothing to do
+    end
+
+    def add_type(types, set : Set(Type), type : UnionType)
+      type.union_types.each do |subtype|
+        add_type types, set, subtype
+      end
+    end
+
+    def add_type(types, set : Set(Type), type : AliasType)
+      aliased = type.remove_alias
+      if aliased == type
+        if set.add?(type)
+          types << type
+        end
+      else
+        add_type types, set, aliased
+      end
+    end
+
+    def add_type(types, set : Set(Type), type : VoidType)
+      add_type(types, set, nil_type)
+    end
+
+    def add_type(types, set : Set(Type), type : Type)
+      if set.add?(type)
+        types << type
+      end
+    end
+
+    def add_type(types, set : Set(Type), type : Nil)
       # Nothing to do
     end
 
@@ -209,7 +248,7 @@ module Crystal
 
     def self.least_common_ancestor(
       type1 : MetaclassType | GenericClassInstanceMetaclassType,
-      type2 : MetaclassType | GenericClassInstanceMetaclassType,
+      type2 : MetaclassType | GenericClassInstanceMetaclassType
     )
       return nil unless unifiable_metaclass?(type1) && unifiable_metaclass?(type2)
 
@@ -227,7 +266,7 @@ module Crystal
 
     def self.least_common_ancestor(
       type1 : NonGenericModuleType | GenericModuleInstanceType | GenericClassType,
-      type2 : NonGenericModuleType | GenericModuleInstanceType | GenericClassType,
+      type2 : NonGenericModuleType | GenericModuleInstanceType | GenericClassType
     )
       return type2 if type1.implements?(type2)
       return type1 if type2.implements?(type1)
