@@ -84,7 +84,8 @@ class HTTP::StaticFileHandler
   private def check_request_path!(context : Server::Context, request_path : String) : Bool
     # File path cannot contain '\0' (NUL) because all filesystem I know
     # don't accept '\0' character as file name.
-    if request_path.includes? '\0'
+    # On Windows, it also cannot contain '\\' to prevent path traversal.
+    if request_path.includes?('\0') || ({% if flag?(:win32) %} request_path.includes?('\\') {% else %} false {% end %})
       context.response.respond_with_status(:bad_request)
       return false
     end
