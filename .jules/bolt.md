@@ -1,0 +1,3 @@
+## $(date +%Y-%m-%d) - Array Deduplication on Type Merge Paths
+**Learning:** In the Crystal compiler's semantic phase (`type_merge.cr`), deduplicating `UnionType` parts was using an O(N^2) `Array#includes?` check. For large union types, this caused measurable overhead. However, simple Sets have high initialization cost, making them slower for small arrays.
+**Action:** Use a conditional threshold (e.g. `if objects.size > 15`) to switch from `Array#includes?` to `Set#add?`, getting O(N) performance on large unions while avoiding allocation overhead for the majority of small unions. Maintain order by appending to the array conditionally on the Set insertion returning true.
