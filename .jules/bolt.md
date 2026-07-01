@@ -1,0 +1,3 @@
+## 2024-05-15 - Fast Array Deduplication in Compilers
+**Learning:** Checking `array.includes?(item)` while iteratively building large lists of unique objects (like in type merging) creates an O(N^2) bottleneck. However, allocating a `Set` for very small arrays (< 15 items) adds unnecessary object allocation overhead.
+**Action:** When tracking object uniqueness in performance-critical code, check the input array size. Use a parallel `Set(T)` for rapid O(1) membership lookups to replace `.includes?` checks on large inputs, while retaining the Array to preserve deterministic ordering. Overload recursive methods to pass the `Set` downwards, maintaining backwards compatibility.

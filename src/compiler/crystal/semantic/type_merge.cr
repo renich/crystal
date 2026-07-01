@@ -1,3 +1,4 @@
+require "set"
 require "../program"
 
 module Crystal
@@ -70,9 +71,46 @@ module Crystal
 
     def compact_types(objects, &) : Array(Type)
       all_types = Array(Type).new(objects.size)
-      objects.each { |obj| add_type all_types, yield(obj) }
+      # ⚡ Bolt: Use a parallel Set to optimize O(N^2) `.includes?` lookups
+      # down to O(1) during type union accumulation, avoiding significant
+      # overhead for large unions while preserving insertion order.
+      if objects.size > 15
+        set = Set(Type).new(objects.size)
+        objects.each { |obj| add_type all_types, set, yield(obj) }
+      else
+        objects.each { |obj| add_type all_types, yield(obj) }
+      end
       all_types.reject! &.no_return? if all_types.size > 1
       all_types
+    end
+
+    def add_type(types, set, type : UnionType)
+      type.union_types.each do |subtype|
+        add_type types, set, subtype
+      end
+    end
+
+    def add_type(types, set, type : AliasType)
+      aliased = type.remove_alias
+      if aliased == type
+        types << type if set.add?(type)
+      else
+        add_type types, set, aliased
+      end
+    end
+
+    # When Void participates in a union, it becomes Nil
+    # (users shouldn't deal with real Void values)
+    def add_type(types, set, type : VoidType)
+      add_type(types, set, nil_type)
+    end
+
+    def add_type(types, set, type : Type)
+      types << type if set.add?(type)
+    end
+
+    def add_type(types, set, type : Nil)
+      # Nothing to do
     end
 
     def add_type(types, type : UnionType)
@@ -209,7 +247,7 @@ module Crystal
 
     def self.least_common_ancestor(
       type1 : MetaclassType | GenericClassInstanceMetaclassType,
-      type2 : MetaclassType | GenericClassInstanceMetaclassType,
+      type2 : MetaclassType | GenericClassInstanceMetaclassType
     )
       return nil unless unifiable_metaclass?(type1) && unifiable_metaclass?(type2)
 
@@ -227,7 +265,7 @@ module Crystal
 
     def self.least_common_ancestor(
       type1 : NonGenericModuleType | GenericModuleInstanceType | GenericClassType,
-      type2 : NonGenericModuleType | GenericModuleInstanceType | GenericClassType,
+      type2 : NonGenericModuleType | GenericModuleInstanceType | GenericClassType
     )
       return type2 if type1.implements?(type2)
       return type1 if type2.implements?(type1)
