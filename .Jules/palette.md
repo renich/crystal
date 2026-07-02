@@ -1,0 +1,1 @@
+## 2024-07-02 - ARIA labels needed for Materialize tooltips\n**Learning:** Visual tooltips (like Materialize CSS `data-tooltip`) do not inherently provide an accessible name for screen readers on icon-only links and buttons.\n**Action:** Always add `aria-label` to the parent anchor and `aria-hidden="true"` to the decorative child SVG/icon.
