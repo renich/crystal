@@ -70,9 +70,44 @@ module Crystal
 
     def compact_types(objects, &) : Array(Type)
       all_types = Array(Type).new(objects.size)
-      objects.each { |obj| add_type all_types, yield(obj) }
+
+      # ⚡ Bolt Optimization: Use a Set for O(1) membership checks for large collections
+      if objects.size > 15
+        seen = Set(UInt64).new(objects.size)
+        objects.each { |obj| add_type all_types, seen, yield(obj) }
+      else
+        objects.each { |obj| add_type all_types, yield(obj) }
+      end
+
       all_types.reject! &.no_return? if all_types.size > 1
       all_types
+    end
+
+    def add_type(types, seen : Set(UInt64), type : UnionType)
+      type.union_types.each do |subtype|
+        add_type types, seen, subtype
+      end
+    end
+
+    def add_type(types, seen : Set(UInt64), type : AliasType)
+      aliased = type.remove_alias
+      if aliased == type
+        types << type if seen.add?(type.object_id)
+      else
+        add_type types, seen, aliased
+      end
+    end
+
+    def add_type(types, seen : Set(UInt64), type : VoidType)
+      add_type(types, seen, nil_type)
+    end
+
+    def add_type(types, seen : Set(UInt64), type : Type)
+      types << type if seen.add?(type.object_id)
+    end
+
+    def add_type(types, seen : Set(UInt64), type : Nil)
+      # Nothing to do
     end
 
     def add_type(types, type : UnionType)
@@ -209,7 +244,7 @@ module Crystal
 
     def self.least_common_ancestor(
       type1 : MetaclassType | GenericClassInstanceMetaclassType,
-      type2 : MetaclassType | GenericClassInstanceMetaclassType,
+      type2 : MetaclassType | GenericClassInstanceMetaclassType
     )
       return nil unless unifiable_metaclass?(type1) && unifiable_metaclass?(type2)
 
@@ -227,7 +262,7 @@ module Crystal
 
     def self.least_common_ancestor(
       type1 : NonGenericModuleType | GenericModuleInstanceType | GenericClassType,
-      type2 : NonGenericModuleType | GenericModuleInstanceType | GenericClassType,
+      type2 : NonGenericModuleType | GenericModuleInstanceType | GenericClassType
     )
       return type2 if type1.implements?(type2)
       return type1 if type2.implements?(type1)
