@@ -449,7 +449,11 @@ module Crystal::Playground
       public_dir = File.join(playground_dir, "public")
 
       agent_ws = PathWebSocketHandler.new "/agent" do |ws, context|
-        match_data = context.request.path.not_nil!.match!(/\/(\d+)\/(\d+)$/)
+        match_data = context.request.path.not_nil!.match(/\/(\d+)\/(\d+)$/)
+        unless match_data
+          ws.close :policy_violation, "Invalid agent path"
+          next
+        end
         session_key = match_data[1].to_i
         tag = match_data[2].to_i
         Log.info { "#{context.request.path} WebSocket connected (session=#{session_key}, tag=#{tag})" }
@@ -466,8 +470,8 @@ module Crystal::Playground
       end
 
       client_ws = PathWebSocketHandler.new "/client" do |ws, context|
-        origin = context.request.headers["Origin"]
-        if !accept_request?(origin)
+        origin = context.request.headers["Origin"]?
+        if !origin || !accept_request?(origin)
           Log.warn { "Invalid Request Origin: #{origin}" }
           ws.close :policy_violation, "Invalid Request Origin"
         else
@@ -476,20 +480,24 @@ module Crystal::Playground
           Log.info { "/client WebSocket connected as session=#{@sessions_key}" }
 
           ws.on_message do |message|
-            json = JSON.parse(message)
-            case json["type"].as_s
-            when "run"
-              source = json["source"].as_s
-              tag = json["tag"].as_i
-              session.run source, tag
-            when "stop"
-              session.stop
-            when "format"
-              source = json["source"].as_s
-              tag = json["tag"].as_i
-              session.format source, tag
-            else
-              # TODO: maybe raise because it's an unexpected message?
+            begin
+              json = JSON.parse(message)
+              case json["type"]?.try(&.as_s?)
+              when "run"
+                if (source = json["source"]?.try(&.as_s?)) && (tag = json["tag"]?.try(&.as_i?))
+                  session.run source, tag
+                end
+              when "stop"
+                session.stop
+              when "format"
+                if (source = json["source"]?.try(&.as_s?)) && (tag = json["tag"]?.try(&.as_i?))
+                  session.format source, tag
+                end
+              else
+                # TODO: maybe raise because it's an unexpected message?
+              end
+            rescue ex : JSON::ParseException | KeyError | TypeCastError
+              Log.warn { "Invalid JSON message received from client: #{ex.message}" }
             end
           end
         end
