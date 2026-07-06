@@ -449,7 +449,12 @@ module Crystal::Playground
       public_dir = File.join(playground_dir, "public")
 
       agent_ws = PathWebSocketHandler.new "/agent" do |ws, context|
-        match_data = context.request.path.not_nil!.match!(/\/(\d+)\/(\d+)$/)
+        match_data = context.request.path.not_nil!.match(/\/(\d+)\/(\d+)$/)
+        unless match_data
+          Log.warn { "Invalid Agent Path: #{context.request.path}" }
+          ws.close :policy_violation, "Invalid Path"
+          next
+        end
         session_key = match_data[1].to_i
         tag = match_data[2].to_i
         Log.info { "#{context.request.path} WebSocket connected (session=#{session_key}, tag=#{tag})" }
@@ -466,7 +471,7 @@ module Crystal::Playground
       end
 
       client_ws = PathWebSocketHandler.new "/client" do |ws, context|
-        origin = context.request.headers["Origin"]
+        origin = context.request.headers["Origin"]?
         if !accept_request?(origin)
           Log.warn { "Invalid Request Origin: #{origin}" }
           ws.close :policy_violation, "Invalid Request Origin"
@@ -476,17 +481,23 @@ module Crystal::Playground
           Log.info { "/client WebSocket connected as session=#{@sessions_key}" }
 
           ws.on_message do |message|
-            json = JSON.parse(message)
-            case json["type"].as_s
+            begin
+              json = JSON.parse(message).as_h
+              type = json["type"]?.try(&.as_s?) || ""
+            rescue ex
+              Log.warn { "Invalid JSON message: #{ex.message}" }
+              next
+            end
+            case type
             when "run"
-              source = json["source"].as_s
-              tag = json["tag"].as_i
+              source = json["source"]?.try(&.as_s?) || ""
+              tag = json["tag"]?.try(&.as_i?) || 0
               session.run source, tag
             when "stop"
               session.stop
             when "format"
-              source = json["source"].as_s
-              tag = json["tag"].as_i
+              source = json["source"]?.try(&.as_s?) || ""
+              tag = json["tag"]?.try(&.as_i?) || 0
               session.format source, tag
             else
               # TODO: maybe raise because it's an unexpected message?
