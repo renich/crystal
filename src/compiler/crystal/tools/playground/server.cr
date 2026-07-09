@@ -325,7 +325,13 @@ module Crystal::Playground
     def call(context)
       case {context.request.method, context.request.path}
       when {"GET", /\/workbook\/playground\/(.*)/}
-        files = Dir["playground/#{$1}.{md,html,cr}"]
+        request_path = $1
+        if request_path.includes?('\0') || request_path.includes?("..")
+          context.response.respond_with_status(:bad_request)
+          return
+        end
+
+        files = Dir["playground/#{request_path}.{md,html,cr}"]
         if files.size > 0
           context.response.headers["Content-Type"] = "text/html"
           page = FileContentPage.new(files[0])
