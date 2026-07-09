@@ -25,10 +25,22 @@ describe HTTP::StaticFileHandler do
 
   it "handles forbidden characters in windows paths" do
     response = handle HTTP::Request.new("GET", "/foo\\bar.txt"), ignore_body: false
-    response.status_code.should eq 400
+    {% if flag?(:win32) %}
+      response.status_code.should eq 400
+    {% else %}
+      response.status_code.should eq 404
+    {% end %}
 
+    # This file can't be checkout out from git on Windows, thus we need to create it here.
+    File.touch(Path[datapath("static_file_handler"), Path.posix("back\\slash.txt")])
     response = handle HTTP::Request.new("GET", "/back\\slash.txt"), ignore_body: false
-    response.status_code.should eq 400
+    {% if flag?(:win32) %}
+      response.status_code.should eq 400
+    {% else %}
+      response.status_code.should eq 200
+    {% end %}
+  ensure
+    File.delete(Path[datapath("static_file_handler"), Path.posix("back\\slash.txt")])
   end
 
   it "adds Etag header" do
