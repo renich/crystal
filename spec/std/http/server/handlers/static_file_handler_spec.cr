@@ -513,6 +513,13 @@ describe HTTP::StaticFileHandler do
       response = handle HTTP::Request.new("GET", "/#{path}")
       response.status_code.should eq(400)
     end
+
+    {% if flag?(:win32) %}
+      ["%5C", "test.txt%5C", "\\", "test.txt\\"].each do |path|
+        response = handle HTTP::Request.new("GET", "/#{path}")
+        response.status_code.should eq(400)
+      end
+    {% end %}
   end
 
   it "handles invalid redirect path" do
