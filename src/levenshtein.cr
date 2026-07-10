@@ -89,10 +89,33 @@ module Levenshtein
 
     @tolerance : Int32
 
+    # Creates a new `Finder` to find the closest match for the given *target* string.
+    #
+    # The *tolerance* argument sets the maximum permitted Levenshtein distance.
+    # If *tolerance* is not provided, it defaults to roughly 20% of the target's length
+    # (specifically `(target.size / 5.0).ceil.to_i`).
     def initialize(@target : String, tolerance : Int? = nil)
       @tolerance = tolerance || (target.size / 5.0).ceil.to_i
     end
 
+    # Tests a string against the target to see if it is a closer match than any previously tested strings.
+    #
+    # Evaluates the Levenshtein distance between the *name* and the target string.
+    # If the distance is less than or equal to the defined tolerance, and it is the
+    # smallest distance seen so far, this entry is recorded as the best match.
+    #
+    # The optional *value* argument allows you to store a different string as the
+    # best match while testing against *name*. If *value* is omitted, it defaults to *name*.
+    #
+    # ```
+    # require "levenshtein"
+    #
+    # finder = Levenshtein::Finder.new("hello", tolerance: 2)
+    # finder.test("hallo")
+    # finder.test("hulk", "The Incredible Hulk")
+    #
+    # finder.best_match # => "hallo"
+    # ```
     def test(name : String, value : String = name)
       distance = Levenshtein.distance(@target, name)
       if distance <= @tolerance
@@ -106,6 +129,8 @@ module Levenshtein
       end
     end
 
+    # Returns the best matching string found so far, or `nil` if no strings were
+    # tested or if none met the tolerance threshold.
     def best_match : String?
       @best_entry.try &.value
     end
