@@ -16,3 +16,7 @@ This file contains CRITICAL security learnings only (e.g., unique vulnerability 
 **Vulnerability:** The Crystal Playground WebSocket server endpoints would crash the fiber (DoS) if they received an invalid route missing digits (`Regex#match!`), a request missing an Origin header (`KeyError` from `headers["Origin"]`), or malformed JSON payloads (`JSON::ParseException` and `KeyError` from `JSON.parse` and `#as_s`).
 **Learning:** Crystal's fiber model crashes entirely on unhandled exceptions in the request loop. Unsafe assertion methods (`match!`, direct Hash lookups `[]`, unprotected `.as_s` cast) are highly dangerous on untrusted inputs like headers and payload bodies.
 **Prevention:** Always use safe accessors (`[]?`, `match`), rescue `JSON::ParseException`, and use safe casts (`.try(&.as_s?)`) when processing user data in web handlers.
+## 2024-05-18 - Path Traversal in StaticFileHandler on Windows
+**Vulnerability:** HTTP::StaticFileHandler allowed backslashes (`\`) in paths, which are valid directory separators on Windows, allowing path traversal attacks (e.g., `..\..\`).
+**Learning:** Checking for null bytes (`\0`) is insufficient on Windows. While POSIX systems treat `\` as a normal character, Windows treats it as a directory separator, necessitating platform-specific validation.
+**Prevention:** Conditionally validate and reject `\` in URL paths when running on Windows using `{% if flag?(:win32) %}`.
