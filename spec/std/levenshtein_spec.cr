@@ -34,4 +34,28 @@ describe "levenshtein" do
     finder.test "hallo world", "HALLO WORLD"
     finder.best_match.should eq("HALL")
   end
+
+  it "finds with block" do
+    best_match = Levenshtein.find("hello") do |l|
+      l.test "hulk"
+      l.test "holk"
+      l.test "halka"
+      l.test "ello"
+    end
+    best_match.should eq("ello")
+
+    best_match2 = Levenshtein.find("hello", 1) do |l|
+      l.test "hulk"
+      l.test "holk"
+      l.test "halka"
+    end
+    best_match2.should be_nil
+  end
+
+  it "finds with array" do
+    Levenshtein.find("hello", ["hullo", "hel", "hall", "hell"]).should eq("hullo")
+    Levenshtein.find("hello", ["hullo", "hel", "hall", "hell"], 2).should eq("hullo")
+    Levenshtein.find("hello", ["hurlo", "hel", "hall"], 1).should be_nil
+    Levenshtein.find("hello", [] of String).should be_nil
+  end
 end
