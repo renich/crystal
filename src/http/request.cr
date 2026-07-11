@@ -103,6 +103,20 @@ class HTTP::Request
     form_params? || HTTP::Params.new
   end
 
+  # Returns the request target, usually representing the path and the query string.
+  #
+  # When query parameters are modified via `#query_params`, the updated query string
+  # is automatically reflected in this value.
+  #
+  # ```
+  # require "http/request"
+  #
+  # request = HTTP::Request.new("GET", "/search?q=crystal")
+  # request.resource # => "/search?q=crystal"
+  #
+  # request.query_params["page"] = "2"
+  # request.resource # => "/search?q=crystal&page=2"
+  # ```
   def resource : String
     update_uri
     @uri.try(&.request_target) || @resource
