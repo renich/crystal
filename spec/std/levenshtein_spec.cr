@@ -34,4 +34,44 @@ describe "levenshtein" do
     finder.test "hallo world", "HALLO WORLD"
     finder.best_match.should eq("HALL")
   end
+
+  describe ".find" do
+    it "finds the best match among strings added within the block" do
+      best_match = Levenshtein.find("hello") do |l|
+        l.test "hulk"
+        l.test "holk"
+        l.test "halka"
+        l.test "ello"
+      end
+      best_match.should eq("ello")
+    end
+
+    it "finds the best match among strings provided in an array" do
+      Levenshtein.find("hello", ["hullo", "hel", "hall", "hell"], 2).should eq("hullo")
+    end
+
+    it "returns nil when no match is found within tolerance" do
+      Levenshtein.find("hello", ["hurlo", "hel", "hall"], 1).should be_nil
+    end
+  end
+
+  describe "Finder.find" do
+    it "finds the best match among strings added within the block" do
+      best_match = Levenshtein::Finder.find("hello") do |l|
+        l.test "hulk"
+        l.test "holk"
+        l.test "halka"
+        l.test "ello"
+      end
+      best_match.should eq("ello")
+    end
+
+    it "finds the best match among strings provided in an array" do
+      Levenshtein::Finder.find("hello", ["hullo", "hel", "hall", "hell"], 2).should eq("hullo")
+    end
+
+    it "returns nil when no match is found within tolerance" do
+      Levenshtein::Finder.find("hello", ["hurlo", "hel", "hall"], 1).should be_nil
+    end
+  end
 end
