@@ -521,6 +521,14 @@ struct UUID
     io.write_string(buffer.to_slice)
   end
 
+  # Returns a `String` that is a valid hexadecimal string representation of *self*.
+  #
+  # ```
+  # require "uuid"
+  #
+  # uuid = UUID.new("87b3042b-9b9a-41b7-8b15-a93d3f17025e")
+  # uuid.hexstring # => "87b3042b9b9a41b78b15a93d3f17025e"
+  # ```
   def hexstring : String
     @bytes.to_slice.hexstring
   end
