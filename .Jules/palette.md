@@ -1,0 +1,3 @@
+## 2024-05-24 - Accessibility for icon-only buttons
+**Learning:** For accessibility on icon-only links and buttons, always add `aria-label` to the parent anchor, `aria-hidden="true"` to the decorative child SVG, and `alt=""` to purely decorative wrapper images. Visual tooltips (like Materialize CSS's `data-tooltip`) do not inherently provide an accessible name for screen readers.
+**Action:** Always check links with only SVGs or images, and add `aria-label` to the `a` tag and `aria-hidden="true"` to the `svg` or `img` tag.
