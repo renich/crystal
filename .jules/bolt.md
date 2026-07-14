@@ -16,3 +16,8 @@ This file contains CRITICAL performance learnings only (e.g., unique bottlenecks
 ## 2024-05-24 - Compiler Internal Performance: Type Merging
 **Learning:** Standalone benchmark scripts attempting to require compiler internal files directly (like `src/compiler/crystal/semantic/type_merge.cr`) often fail to compile due to missing preludes or constants (e.g., `Annotatable`).
 **Action:** When benchmarking internal compiler components, mock the core logic within the standalone script to isolate the algorithmic performance difference, then verify correctness by building the full compiler and running standard specifications (e.g., `make crystal` and `bin/crystal spec`).
+
+## 2024-05-24 - Optimize Type Merge Object Tracking
+
+**Learning:** When adding unique elements to an array in hot paths like `type_merge` in the Crystal compiler, `includes?` results in O(N^2) complexity. Using a parallel `Set(UInt64)` based on `object_id` significantly improves performance for larger collections, changing lookup from O(N) to O(1). However, `Set` allocation has overhead, so a threshold (e.g., `objects.size > 15`) should be used to fall back to `includes?` for smaller arrays.
+**Action:** Always prefer `Set(UInt64)` for tracking object membership in performance-critical loops when working with arrays larger than 15 elements, maintaining backwards compatibility via method overloading for external callers.
