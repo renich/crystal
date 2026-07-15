@@ -3,7 +3,14 @@
 # A Box's purpose is passing data to C as a `Void*` and then converting that
 # back to the original data type.
 #
-# For an example usage, see `Proc`'s explanation about sending Procs to C.
+# ```
+# string = "hello"
+# pointer = Box.box(string)
+# unboxed = Box(String).unbox(pointer)
+# unboxed # => "hello"
+# ```
+#
+# For another example usage, see `Proc`'s explanation about sending Procs to C.
 class Box(T)
   # :nodoc:
   #
