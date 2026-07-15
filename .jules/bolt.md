@@ -16,3 +16,8 @@ This file contains CRITICAL performance learnings only (e.g., unique bottlenecks
 ## 2024-05-24 - Compiler Internal Performance: Type Merging
 **Learning:** Standalone benchmark scripts attempting to require compiler internal files directly (like `src/compiler/crystal/semantic/type_merge.cr`) often fail to compile due to missing preludes or constants (e.g., `Annotatable`).
 **Action:** When benchmarking internal compiler components, mock the core logic within the standalone script to isolate the algorithmic performance difference, then verify correctness by building the full compiler and running standard specifications (e.g., `make crystal` and `bin/crystal spec`).
+
+## 2024-07-15 - Optimizing Array#includes? lookups with Set tracking in Type Merging
+**Learning:** When collecting unique items from lists using `Array#includes?` on every element (like in `type_merge.cr`'s `compact_types`), it introduces O(N^2) complexity. This becomes a bottleneck for larger arrays, significantly slowing down semantic analysis. However, blindly replacing Array with Set for all array sizes introduces constant allocation overhead that slows down the most common path (small arrays <= 15 items).
+
+**Action:** Overload the recursive methods (`add_type` here) to optionally accept a `Set` for fast O(1) membership checks via `.add?`. In the caller (`compact_types`), branch based on input size: for small inputs (`<= 15`), stick to the basic Array and O(N) lookup. For larger inputs, initialize a `Set` alongside the `Array` to get the best of both worlds (1.4x faster for 100 items, 5.8x faster for 500 items).
