@@ -16,3 +16,6 @@ This file contains CRITICAL performance learnings only (e.g., unique bottlenecks
 ## 2024-05-24 - Compiler Internal Performance: Type Merging
 **Learning:** Standalone benchmark scripts attempting to require compiler internal files directly (like `src/compiler/crystal/semantic/type_merge.cr`) often fail to compile due to missing preludes or constants (e.g., `Annotatable`).
 **Action:** When benchmarking internal compiler components, mock the core logic within the standalone script to isolate the algorithmic performance difference, then verify correctness by building the full compiler and running standard specifications (e.g., `make crystal` and `bin/crystal spec`).
+## 2024-06-05 - Optimize type merging in Crystal Compiler
+**Learning:** Type merging heavily uses `Array#includes?` to track uniqueness, which results in O(N^2) complexity for large unions. Using `Set(UInt64)` with `object_id` for reference equality dramatically improves IPS for large sets of types, while avoiding `Set` allocation for small sizes (`<=15`) avoids the overhead that makes sets slower for small numbers of types.
+**Action:** When tracking reference objects for uniqueness in performance-critical paths, consider a hybrid approach: iterate arrays for small collections and use `Set(UInt64)` over `object_id` for collections above a small threshold (e.g. 15).
