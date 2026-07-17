@@ -515,6 +515,15 @@ describe HTTP::StaticFileHandler do
     end
   end
 
+  {% if flag?(:win32) %}
+    it "returns 400 for backslashes on Windows" do
+      %w(%5Ctest ..%5C).each do |path|
+        response = handle HTTP::Request.new("GET", "/#{path}")
+        response.status_code.should eq(400)
+      end
+    end
+  {% end %}
+
   it "handles invalid redirect path" do
     response = handle HTTP::Request.new("GET", "test.txt%0A")
     response.status_code.should eq(302)
