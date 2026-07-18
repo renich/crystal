@@ -178,8 +178,17 @@ module Base64
     count
   end
 
-  # Returns the base64-decoded version of *data* as a string.
+  # Returns the base64-decoded version of *data* as a `String`.
+  #
   # This will decode either the normal or urlsafe alphabets.
+  #
+  # Raises `Base64::Error` if the data is incorrectly formatted.
+  #
+  # ```
+  # require "base64"
+  #
+  # Base64.decode_string("U2VuZCByZWluZm9yY2VtZW50cw==\n") # => "Send reinforcements"
+  # ```
   def decode_string(data) : String
     slice = data.to_slice
     String.new(decode_size(slice.size)) do |buf|
