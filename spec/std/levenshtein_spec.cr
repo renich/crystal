@@ -34,4 +34,34 @@ describe "levenshtein" do
     finder.test "hallo world", "HALLO WORLD"
     finder.best_match.should eq("HALL")
   end
+
+  describe ".find" do
+    it "finds with block" do
+      best = Levenshtein.find("hello") do |l|
+        l.test "hulk"
+        l.test "holk"
+        l.test "halka"
+        l.test "ello"
+      end
+      best.should eq("ello")
+    end
+
+    it "returns nil with block when no string within tolerance" do
+      best = Levenshtein.find("hello", 1) do |l|
+        l.test "hulk"
+        l.test "holk"
+      end
+      best.should be_nil
+    end
+
+    it "finds with array of strings" do
+      best = Levenshtein.find("hello", ["hullo", "hel", "hall", "hell"], 2)
+      best.should eq("hullo")
+    end
+
+    it "returns nil with array of strings when no string within tolerance" do
+      best = Levenshtein.find("hello", ["hurlo", "hel", "hall"], 1)
+      best.should be_nil
+    end
+  end
 end
