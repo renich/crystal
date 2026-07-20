@@ -521,6 +521,16 @@ struct UUID
     io.write_string(buffer.to_slice)
   end
 
+  # Returns a string representation of the UUID as a 32-character hexadecimal string without hyphens.
+  #
+  # ```
+  # require "uuid"
+  #
+  # uuid = UUID.empty
+  # uuid.hexstring # => "00000000000000000000000000000000"
+  # uuid2 = UUID.new("c49fc136-9362-4414-81a5-9a7e0fcca0f1")
+  # uuid2.hexstring # => "c49fc1369362441481a59a7e0fcca0f1"
+  # ```
   def hexstring : String
     @bytes.to_slice.hexstring
   end
