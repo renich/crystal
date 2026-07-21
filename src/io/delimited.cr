@@ -42,6 +42,18 @@ class IO::Delimited < IO
     @active_delimiter_buffer = Bytes.empty
   end
 
+  # Reads data from the underlying `IO` into *slice* until the delimiter is reached.
+  #
+  # Returns the number of bytes read. If the delimiter was already found or if
+  # the underlying `IO` has reached EOF, returns `0`.
+  #
+  # ```
+  # io = IO::Memory.new("hello||world")
+  # delimited = IO::Delimited.new(io, read_delimiter: "||")
+  # slice = Bytes.new(5)
+  # delimited.read(slice) # => 5
+  # String.new(slice)     # => "hello"
+  # ```
   def read(slice : Bytes) : Int32
     check_open
 
