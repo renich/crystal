@@ -84,7 +84,7 @@ module Crystal
     def add_type(types, type : AliasType)
       aliased = type.remove_alias
       if aliased == type
-        types << type unless types.includes? type
+        add_type_to_array(types, type)
       else
         add_type types, aliased
       end
@@ -97,7 +97,18 @@ module Crystal
     end
 
     def add_type(types, type : Type)
-      types << type unless types.includes? type
+      add_type_to_array(types, type)
+    end
+
+    private def add_type_to_array(types, type)
+      found = false
+      types.each do |t|
+        if t.same?(type)
+          found = true
+          break
+        end
+      end
+      types << type unless found
     end
 
     def add_type(set, type : Nil)
@@ -209,7 +220,7 @@ module Crystal
 
     def self.least_common_ancestor(
       type1 : MetaclassType | GenericClassInstanceMetaclassType,
-      type2 : MetaclassType | GenericClassInstanceMetaclassType,
+      type2 : MetaclassType | GenericClassInstanceMetaclassType
     )
       return nil unless unifiable_metaclass?(type1) && unifiable_metaclass?(type2)
 
@@ -227,7 +238,7 @@ module Crystal
 
     def self.least_common_ancestor(
       type1 : NonGenericModuleType | GenericModuleInstanceType | GenericClassType,
-      type2 : NonGenericModuleType | GenericModuleInstanceType | GenericClassType,
+      type2 : NonGenericModuleType | GenericModuleInstanceType | GenericClassType
     )
       return type2 if type1.implements?(type2)
       return type1 if type2.implements?(type1)
