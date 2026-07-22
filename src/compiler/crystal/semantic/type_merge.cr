@@ -84,7 +84,10 @@ module Crystal
     def add_type(types, type : AliasType)
       aliased = type.remove_alias
       if aliased == type
-        types << type unless types.includes? type
+        types.each do |t|
+          return if t.same?(type)
+        end
+        types << type
       else
         add_type types, aliased
       end
@@ -97,7 +100,10 @@ module Crystal
     end
 
     def add_type(types, type : Type)
-      types << type unless types.includes? type
+      types.each do |t|
+        return if t.same?(type)
+      end
+      types << type
     end
 
     def add_type(set, type : Nil)
