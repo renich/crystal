@@ -48,12 +48,16 @@ module Crystal
       return second if first.no_return?
       return first if second.no_return?
 
-      if first.nil_type? && second.is_a?(UnionType) && second.union_types.includes?(first)
-        return second
+      if first.nil_type? && second.is_a?(UnionType)
+        second.union_types.each do |subtype|
+          return second if subtype.same?(first)
+        end
       end
 
-      if second.nil_type? && first.is_a?(UnionType) && first.union_types.includes?(second)
-        return first
+      if second.nil_type? && first.is_a?(UnionType)
+        first.union_types.each do |subtype|
+          return first if subtype.same?(second)
+        end
       end
 
       # General case
@@ -84,7 +88,10 @@ module Crystal
     def add_type(types, type : AliasType)
       aliased = type.remove_alias
       if aliased == type
-        types << type unless types.includes? type
+        types.each do |t|
+          return if t.same?(type)
+        end
+        types << type
       else
         add_type types, aliased
       end
@@ -97,7 +104,10 @@ module Crystal
     end
 
     def add_type(types, type : Type)
-      types << type unless types.includes? type
+      types.each do |t|
+        return if t.same?(type)
+      end
+      types << type
     end
 
     def add_type(set, type : Nil)
