@@ -339,6 +339,17 @@ struct JSON::Any
     raw.to_json(json)
   end
 
+  # Forwards `to_json_object_key` to `raw` if it responds to that method,
+  # raises `JSON::Error` otherwise.
+  def to_json_object_key : String
+    raw = @raw
+    if raw.responds_to?(:to_json_object_key)
+      raw.to_json_object_key
+    else
+      raise JSON::Error.new("Can't convert #{raw.class} to a JSON object key")
+    end
+  end
+
   def to_yaml(yaml : YAML::Nodes::Builder) : Nil
     raw.to_yaml(yaml)
   end

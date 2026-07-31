@@ -205,6 +205,23 @@ describe JSON::Any do
     any2.as_a[0].as_a.should_not be(any.as_a[0].as_a)
   end
 
+  it "#to_json_object_key" do
+    JSON::Any.new("test").to_json_object_key.should eq("test")
+    JSON::Any.new(123_i64).to_json_object_key.should eq("123")
+    JSON::Any.new(123.45).to_json_object_key.should eq("123.45")
+    JSON::Any.new(nil).to_json_object_key.should eq("")
+
+    expect_raises(JSON::Error, "Can't convert Bool to a JSON object key") do
+      JSON::Any.new(true).to_json_object_key
+    end
+    expect_raises(JSON::Error, "Can't convert Array(JSON::Any) to a JSON object key") do
+      JSON::Any.new([] of JSON::Any).to_json_object_key
+    end
+    expect_raises(JSON::Error, "Can't convert Hash(String, JSON::Any) to a JSON object key") do
+      JSON::Any.new({} of String => JSON::Any).to_json_object_key
+    end
+  end
+
   it "#to_yaml" do
     any = JSON.parse <<-JSON
       {
