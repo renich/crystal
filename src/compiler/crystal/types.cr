@@ -3571,7 +3571,7 @@ private def add_to_including_types(type : Crystal::GenericType, all_types)
     # Abstract types also shouldn't form the union of including types
     next if instance.abstract?
 
-    all_types << instance unless all_types.includes?(instance)
+    add_type_if_missing(all_types, instance)
   end
   type.subclasses.each do |subclass|
     add_to_including_types subclass, all_types
@@ -3583,8 +3583,18 @@ private def add_to_including_types(type : Crystal::NonGenericModuleType | Crysta
 end
 
 private def add_to_including_types(type, all_types)
-  virtual_type = type.virtual_type
-  all_types << virtual_type unless all_types.includes?(virtual_type)
+  add_type_if_missing(all_types, type.virtual_type)
+end
+
+private def add_type_if_missing(all_types, type)
+  found = false
+  all_types.each do |t|
+    if t.same?(type)
+      found = true
+      break
+    end
+  end
+  all_types << type unless found
 end
 
 private def add_instance_var_initializer(including_types, name, value, meta_vars)
