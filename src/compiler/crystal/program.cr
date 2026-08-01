@@ -427,7 +427,7 @@ module Crystal
       when UnionType
         types = Array(Type).new(type.union_types.size + 1)
         types.concat type.union_types
-        types << self.nil unless types.includes? self.nil
+        types << self.nil unless types.any?(&.same?(self.nil))
         union_of types
       else
         union_of self.nil, type
