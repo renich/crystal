@@ -10,6 +10,24 @@ describe "HTML" do
     it "escapes dangerous characters from a string" do
       HTML.escape("< & > ' \"").should eq("&lt; &amp; &gt; &#39; &quot;")
     end
+
+    it "escapes dangerous characters from a string to an IO" do
+      io = IO::Memory.new
+      HTML.escape("< & > ' \"", io)
+      io.to_s.should eq("&lt; &amp; &gt; &#39; &quot;")
+    end
+
+    it "does not change a safe string to an IO" do
+      io = IO::Memory.new
+      HTML.escape("safe_string", io)
+      io.to_s.should eq("safe_string")
+    end
+
+    it "escapes dangerous characters from bytes to an IO" do
+      io = IO::Memory.new
+      HTML.escape("< & > ' \"".to_slice, io)
+      io.to_s.should eq("&lt; &amp; &gt; &#39; &quot;")
+    end
   end
 
   pending_wasm32 describe: ".unescape" do
