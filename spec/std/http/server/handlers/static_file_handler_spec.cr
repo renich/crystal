@@ -449,6 +449,15 @@ describe HTTP::StaticFileHandler do
     response.headers["Location"].should eq "/foo/?k=%26k%3Dv"
   end
 
+  it "rejects backslashes on windows" do
+    response = handle HTTP::Request.new("GET", "/..\\..\\Windows\\System32\\cmd.exe")
+    {% if flag?(:win32) %}
+      response.status_code.should eq(400)
+    {% else %}
+      response.status_code.should eq(404)
+    {% end %}
+  end
+
   it "does not serve a not found file" do
     response = handle HTTP::Request.new("GET", "/not_found_file.txt")
     response.status_code.should eq(404)
