@@ -1,3 +1,22 @@
+# Implementation of the Blowfish block cipher.
+#
+# Blowfish is a symmetric-key block cipher with a 64-bit block size and a variable key length.
+# This implementation allows for encryption and decryption of 64-bit blocks represented as pairs of 32-bit integers.
+#
+# ```
+# require "crypto/blowfish"
+#
+# blowfish = Crypto::Blowfish.new
+# blowfish.expand_key("secret".to_slice)
+#
+# l, r = 0x01234567_u32, 0x89abcdef_u32
+#
+# el, er = blowfish.encrypt_pair(l, r)
+# dl, dr = blowfish.decrypt_pair(el, er)
+#
+# l == dl # => true
+# r == dr # => true
+# ```
 class Crypto::Blowfish
   DEFAULT_ROUNDS = 16
 
