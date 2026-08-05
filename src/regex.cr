@@ -463,17 +463,26 @@ class Regex
   # ```
   def self.escape(str : String) : String
     String.build do |result|
-      str.each_byte do |byte|
-        {% begin %}
-          case byte.unsafe_chr
-          when {{SPECIAL_CHARACTERS.splat}}
-            result << '\\'
-            result.write_byte byte
-          else
-            result.write_byte byte
-          end
-        {% end %}
-      end
+      escape(str, result)
+    end
+  end
+
+  # Appends a `String` to *io* by escaping any metacharacters in *str*.
+  #
+  # ```
+  # Regex.escape("*?{}.", STDOUT) # prints "\*\?\{\}\."
+  # ```
+  def self.escape(str : String, io : IO) : Nil
+    str.each_byte do |byte|
+      {% begin %}
+        case byte.unsafe_chr
+        when {{SPECIAL_CHARACTERS.splat}}
+          io << '\\'
+          io.write_byte byte
+        else
+          io.write_byte byte
+        end
+      {% end %}
     end
   end
 
@@ -491,7 +500,11 @@ class Regex
   # re.match("sledding") # => Regex::MatchData("sledding")
   # ```
   def self.union(patterns : Enumerable(Regex | String)) : self
-    new patterns.map { |pattern| union_part pattern }.join('|')
+    new String.build { |io|
+      patterns.join(io, '|') do |pattern, io2|
+        union_part(pattern, io2)
+      end
+    }
   end
 
   # Union. Returns a `Regex` that matches any of *patterns*.
@@ -508,12 +521,12 @@ class Regex
     union patterns
   end
 
-  private def self.union_part(pattern : Regex)
-    pattern.to_s
+  private def self.union_part(pattern : Regex, io : IO) : Nil
+    pattern.to_s(io)
   end
 
-  private def self.union_part(pattern : String)
-    escape pattern
+  private def self.union_part(pattern : String, io : IO) : Nil
+    escape(pattern, io)
   end
 
   # Union. Returns a `Regex` that matches either of the operands.
