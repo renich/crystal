@@ -476,20 +476,24 @@ module Crystal::Playground
           Log.info { "/client WebSocket connected as session=#{@sessions_key}" }
 
           ws.on_message do |message|
-            json = JSON.parse(message)
-            case json["type"].as_s
-            when "run"
-              source = json["source"].as_s
-              tag = json["tag"].as_i
-              session.run source, tag
-            when "stop"
-              session.stop
-            when "format"
-              source = json["source"].as_s
-              tag = json["tag"].as_i
-              session.format source, tag
-            else
-              # TODO: maybe raise because it's an unexpected message?
+            begin
+              json = JSON.parse(message)
+              case json["type"].as_s
+              when "run"
+                source = json["source"].as_s
+                tag = json["tag"].as_i
+                session.run source, tag
+              when "stop"
+                session.stop
+              when "format"
+                source = json["source"].as_s
+                tag = json["tag"].as_i
+                session.format source, tag
+              else
+                # TODO: maybe raise because it's an unexpected message?
+              end
+            rescue ex : JSON::ParseException | KeyError | TypeCastError
+              Log.warn { "Invalid WebSocket message: #{ex.message}" }
             end
           end
         end
