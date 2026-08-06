@@ -858,10 +858,26 @@ class Regex
     end
   end
 
+  # Returns `self`.
+  #
+  # `Regex` is an immutable type, so it does not need to be duplicated.
+  #
+  # ```
+  # regex = /abc/i
+  # regex.dup.same?(regex) # => true
+  # ```
   def dup
     self
   end
 
+  # Returns `self`.
+  #
+  # `Regex` is an immutable type, so it does not need to be cloned.
+  #
+  # ```
+  # regex = /abc/i
+  # regex.clone.same?(regex) # => true
+  # ```
   def clone : Regex
     self
   end
