@@ -491,7 +491,11 @@ class Regex
   # re.match("sledding") # => Regex::MatchData("sledding")
   # ```
   def self.union(patterns : Enumerable(Regex | String)) : self
-    new patterns.map { |pattern| union_part pattern }.join('|')
+    new String.build { |io|
+      patterns.join(io, '|') do |pattern, inner_io|
+        union_part(pattern, inner_io)
+      end
+    }
   end
 
   # Union. Returns a `Regex` that matches any of *patterns*.
@@ -508,12 +512,12 @@ class Regex
     union patterns
   end
 
-  private def self.union_part(pattern : Regex)
-    pattern.to_s
+  private def self.union_part(pattern : Regex, io : IO)
+    pattern.to_s(io)
   end
 
-  private def self.union_part(pattern : String)
-    escape pattern
+  private def self.union_part(pattern : String, io : IO)
+    io << escape(pattern)
   end
 
   # Union. Returns a `Regex` that matches either of the operands.
