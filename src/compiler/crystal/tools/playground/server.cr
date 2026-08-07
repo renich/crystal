@@ -466,9 +466,9 @@ module Crystal::Playground
       end
 
       client_ws = PathWebSocketHandler.new "/client" do |ws, context|
-        origin = context.request.headers["Origin"]
-        if !accept_request?(origin)
-          Log.warn { "Invalid Request Origin: #{origin}" }
+        origin = context.request.headers["Origin"]?
+        if !origin || !accept_request?(origin)
+          Log.warn { "Invalid Request Origin: #{origin.inspect}" }
           ws.close :policy_violation, "Invalid Request Origin"
         else
           @sessions_key += 1
