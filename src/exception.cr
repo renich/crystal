@@ -103,6 +103,12 @@ class TypeCastError < Exception
   end
 end
 
+# Raised when a byte sequence is invalid for a given encoding.
+#
+# ```
+# io = IO::Memory.new(Bytes[0xc3, 0x28])
+# io.read_char # raises InvalidByteSequenceError
+# ```
 class InvalidByteSequenceError < Exception
   def initialize(message = "Invalid byte sequence in UTF-8 string")
     super(message)
