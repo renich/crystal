@@ -2,6 +2,17 @@ require "./spec_helper"
 require "ini"
 
 describe "INI" do
+  describe "ParseException" do
+    it "provides line, column and location" do
+      err = expect_raises(INI::ParseException, "Unterminated section at line 1, column 8") do
+        INI.parse("[section")
+      end
+      err.line_number.should eq(1)
+      err.column_number.should eq(8)
+      err.location.should eq({1, 8})
+    end
+  end
+
   describe "parse" do
     context "from String" do
       it "fails on malformed section" do
