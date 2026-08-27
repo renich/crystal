@@ -530,4 +530,28 @@ describe YAML::Any do
       YAML
     any.to_json.should eq %({"foo":"bar","baz":[1,2.3,true,"qux",{"qax":"qox"}]})
   end
+
+  describe "#to_json_object_key" do
+    it "returns string value for String" do
+      any = YAML::Any.new("test_key")
+      any.to_json_object_key.should eq("test_key")
+    end
+
+    it "returns string value for Int64" do
+      any = YAML::Any.new(123_i64)
+      any.to_json_object_key.should eq("123")
+    end
+
+    it "returns string value for Float64" do
+      any = YAML::Any.new(123.45_f64)
+      any.to_json_object_key.should eq("123.45")
+    end
+
+    it "raises JSON::Error if cannot be converted" do
+      any = YAML::Any.new([] of YAML::Any)
+      expect_raises(JSON::Error, "Can't convert Array(YAML::Any) to a JSON object key") do
+        any.to_json_object_key
+      end
+    end
+  end
 end
