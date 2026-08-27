@@ -510,6 +510,12 @@ struct Set(T)
 
   # Deletes every element of the set for which the block is truthy, and returns
   # `self`.
+  #
+  # ```
+  # set = Set{1, 2, 3, 4, 5}
+  # set.reject! { |x| x.even? } # => Set{1, 3, 5}
+  # set                         # => Set{1, 3, 5}
+  # ```
   def reject!(& : T ->) : self
     @hash.reject! { |k, _| yield(k) }
     self
