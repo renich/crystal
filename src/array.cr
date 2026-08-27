@@ -1280,6 +1280,15 @@ class Array(T)
     Indexable.each_cartesian(arrays, reuse: reuse) { |r| yield r }
   end
 
+  # Returns an array of all repeated permutations of length *size*.
+  #
+  # ```
+  # a = [1, 2]
+  # a.repeated_permutations(1) # => [[1], [2]]
+  # a.repeated_permutations(2) # => [[1, 1], [1, 2], [2, 1], [2, 2]]
+  # a.repeated_permutations(3) # => [[1, 1, 1], [1, 1, 2], [1, 2, 1], [1, 2, 2], [2, 1, 1], [2, 1, 2], [2, 2, 1], [2, 2, 2]]
+  # a.repeated_permutations(0) # => [[]]
+  # ```
   def repeated_permutations(size : Int = self.size) : Array(Array(T))
     ary = [] of Array(T)
     each_repeated_permutation(size) do |a|
@@ -1288,6 +1297,19 @@ class Array(T)
     ary
   end
 
+  # Yields all repeated permutations of length *size* to the given block.
+  #
+  # If *reuse* is true, the same array is yielded on each iteration.
+  #
+  # ```
+  # a = [1, 2]
+  # a.each_repeated_permutation(2) { |p| puts p }
+  # # prints:
+  # # [1, 1]
+  # # [1, 2]
+  # # [2, 1]
+  # # [2, 2]
+  # ```
   def each_repeated_permutation(size : Int = self.size, reuse = false, &) : Nil
     n = self.size
     return if size != 0 && n == 0
