@@ -1,3 +1,21 @@
+# An `XML::XPathContext` is used to evaluate XPath expressions against an XML document or node.
+# It allows you to register namespaces and variables for use within the XPath expressions.
+#
+# ```
+# require "xml"
+#
+# doc = XML.parse(<<-XML)
+#   <library xmlns:bk="http://example.com/books">
+#     <bk:book id="1"><bk:title>Crystal in Action</bk:title></bk:book>
+#   </library>
+#   XML
+#
+# ctx = XML::XPathContext.new(doc)
+# ctx.register_namespace("bk", "http://example.com/books")
+#
+# nodes = ctx.evaluate("//bk:book[@id='1']/bk:title")
+# nodes.as(XML::NodeSet).first.content # => "Crystal in Action"
+# ```
 class XML::XPathContext
   getter errors = [] of XML::Error
 
