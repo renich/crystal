@@ -137,6 +137,15 @@ module Base64
   #
   # The *padding* parameter defaults to `true`. When `false`, enough `=` characters
   # are not added to make the output divisible by 4.
+  #
+  # ```
+  # require "base64"
+  #
+  # Base64.urlsafe_encode("Send reinforcements")                          # => "U2VuZCByZWluZm9yY2VtZW50cw=="
+  # Base64.urlsafe_encode("?")                                            # => "Pw=="
+  # Base64.urlsafe_encode("?", padding: false)                            # => "Pw"
+  # Base64.urlsafe_encode(String.build { |s| s.print "a", 255.chr, "b" }) # => "YcO_Yg=="
+  # ```
   def urlsafe_encode(data, padding = true) : String
     slice = data.to_slice
     String.new(encode_size(slice.size)) do |buf|
