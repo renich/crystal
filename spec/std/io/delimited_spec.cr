@@ -36,6 +36,24 @@ private class MemoryIOWithFixedPeek < IO::Memory
 end
 
 describe "IO::Delimited" do
+  describe "#read_byte" do
+    it "doesn't clobber active_delimiter_buffer on read_byte" do
+      io = IO::Memory.new("ab12312")
+      delimited = IO::Delimited.new(io, read_delimiter: "12345".to_slice)
+
+      delimited.peek
+
+      delimited.read_byte.should eq('a'.ord)
+      delimited.read_byte.should eq('b'.ord)
+      delimited.read_byte.should eq('1'.ord)
+      delimited.read_byte.should eq('2'.ord)
+      delimited.read_byte.should eq('3'.ord)
+      delimited.read_byte.should eq('1'.ord)
+      delimited.read_byte.should eq('2'.ord)
+      delimited.read_byte.should be_nil
+    end
+  end
+
   describe "#read" do
     context "without peeking" do
       it "doesn't read past the limit" do
