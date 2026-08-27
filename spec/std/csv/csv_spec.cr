@@ -58,6 +58,9 @@ describe CSV do
       csv[2]
     end
 
+    csv[0]?.should eq("1")
+    csv[2]?.should be_nil
+
     csv[-1].should eq(" 2")
     csv[-2].should eq("1")
 
@@ -80,6 +83,9 @@ describe CSV do
     expect_raises(KeyError) do
       csv[/foo/]
     end
+
+    csv[/on/]?.should eq("1")
+    csv[/foo/]?.should be_nil
   end
 
   it "gets current row" do
@@ -88,8 +94,11 @@ describe CSV do
 
     row = csv.row
     row["one"].should eq("1")
+    row["three"]?.should be_nil
     row[1].should eq(" 2")
+    row[2]?.should be_nil
     row[/on/].should eq("1")
+    row[/foo/]?.should be_nil
     row.size.should eq(2)
 
     row.to_a.should eq(["1", " 2"])
