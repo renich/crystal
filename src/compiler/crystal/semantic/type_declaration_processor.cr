@@ -310,7 +310,7 @@ struct Crystal::TypeDeclarationProcessor
   end
 
   private def find_extending_type(mod)
-    return nil if @has_no_extenders.includes?(mod)
+    return nil if @has_no_extenders.any?(&.same?(mod))
 
     mod.raw_including_types.try &.each do |includer|
       case includer

@@ -1007,7 +1007,7 @@ module Crystal
 
       if type.is_a?(Const)
         # Don't solve a constant we've already seen
-        return nil if @consts.includes?(type)
+        return nil if @consts.any?(&.same?(type))
 
         # Check if the const's value is actually an enum member
         if type.value.type?.try &.is_a?(EnumType)

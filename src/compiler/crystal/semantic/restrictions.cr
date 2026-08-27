@@ -1054,7 +1054,7 @@ module Crystal
       discarded = [] of Type
       other_types.each do |other_type|
         self.union_types.each do |type|
-          next if discarded.includes?(type)
+          next if discarded.any?(&.same?(type))
 
           restricted = type.restrict(other_type, context)
           if restricted
