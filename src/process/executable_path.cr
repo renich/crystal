@@ -54,9 +54,16 @@ class Process
     {% end %}
   end
 
-  # Searches an executable, checking for an absolute path, a path relative to
-  # *pwd* or absolute path, then eventually searching in directories declared
-  # in *path*.
+  # Searches for an executable file, checking for an absolute path, a path relative to
+  # *pwd* (which defaults to the current working directory), and eventually searching
+  # in the directories declared in *path* (which defaults to `ENV["PATH"]`).
+  #
+  # Returns the absolute path to the executable as a `String` if found, or `nil` if not.
+  #
+  # ```
+  # Process.find_executable("ls") # => "/usr/bin/ls"
+  # Process.find_executable("does_not_exist") # => nil
+  # ```
   def self.find_executable(name : Path | String, path : String? = ENV["PATH"]?, pwd : Path | String = Dir.current) : String?
     find_executable_possibilities(Path.new(name), path, pwd) do |p|
       return p.to_s if file_executable?(p)
