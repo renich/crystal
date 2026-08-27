@@ -148,6 +148,35 @@ module Indexable(T)
     self[index]
   end
 
+  # Returns an `Array` with the results of running the block against each element of the collection.
+  #
+  # ```
+  # [1, 2, 3].map { |i| i * 10 } # => [10, 20, 30]
+  # ```
+  #
+  # *Bolt Optimization*: Pre-allocates the `Array` capacity based on the `Indexable` size
+  # and fetches elements via direct indices instead of `each`, drastically reducing
+  # allocation and iteration overhead.
+  def map(& : T -> U) : Array(U) forall U
+    Array(U).new(size) { |i| yield unsafe_fetch(i) }
+  end
+
+  # Like `map`, but the block gets passed both the element and its index.
+  #
+  # ```
+  # ["Alice", "Bob"].map_with_index { |name, i| "User ##{i}: #{name}" }
+  # # => ["User #0: Alice", "User #1: Bob"]
+  # ```
+  #
+  # Accepts an optional *offset* parameter, which tells it to start counting
+  # from there.
+  #
+  # *Bolt Optimization*: Pre-allocates the `Array` capacity based on the `Indexable` size
+  # and fetches elements via direct indices instead of `each_with_index`.
+  def map_with_index(offset = 0, & : T, Int32 -> U) : Array(U) forall U
+    Array(U).new(size) { |i| yield unsafe_fetch(i), offset + i }
+  end
+
   # By using binary search, returns the first element
   # for which the passed block returns a truthy value.
   #
