@@ -2195,9 +2195,9 @@ module Crystal
     private def combine_stringliteral_pieces(pieces, delimiter_state)
       if needs_heredoc_indent_removed?(delimiter_state)
         pieces = remove_heredoc_indent(pieces, delimiter_state.heredoc_indent)
-        pieces.join { |piece| piece.as(StringLiteral).value }
+        String.build { |io| pieces.each { |piece| io << piece.as(StringLiteral).value } }
       else
-        pieces.map(&.value).join
+        String.build { |io| pieces.each { |piece| io << piece.value } }
       end
     end
 
