@@ -225,6 +225,27 @@ describe JSON::Any do
       YAML
   end
 
+  describe "#to_json" do
+    it "returns the JSON string representation" do
+      JSON.parse(%({"foo": "bar", "baz": [1, 2.3, true, "qux", null]})).to_json.should eq %({"foo":"bar","baz":[1,2.3,true,"qux",null]})
+    end
+  end
+
+  describe "#to_pretty_json" do
+    it "returns the pretty JSON string representation" do
+      JSON.parse(%({"foo": "bar", "baz": [1, 2.3, true, "qux", null]})).to_pretty_json.should eq %({
+  "foo": "bar",
+  "baz": [
+    1,
+    2.3,
+    true,
+    "qux",
+    null
+  ]
+})
+    end
+  end
+
   it "#inspect" do
     any = JSON.parse <<-JSON
       {
