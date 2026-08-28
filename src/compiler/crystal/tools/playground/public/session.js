@@ -56,9 +56,10 @@ function cdiv(cssClass) {
 }
 
 Playground.RunButtons = function(options) {
-  var buildAnchor = function(tooltip, octicon) {
+  var buildAnchor = function(tooltip, octicon, ariaLabel) {
     return $("<a>").addClass("run-button btn-floating btn-large waves-effect waves-light tooltipped")
       .attr("href", "#")
+      .attr("aria-label", ariaLabel)
       .attr("data-position", "left").attr("data-delay", "50").attr("data-tooltip", tooltip)
       .append(`<svg viewBox="0 0 16 16" class="mega-octicon"><use xlink:href="/vendor/octicons-19.5.0/octicons.svg#${octicon}-16"></use></svg>`);
   }
@@ -81,8 +82,8 @@ Playground.RunButtons = function(options) {
   var mac = /Mac/.test(navigator.platform);
 
   options.container
-    .prepend(this.stopButton = buildAnchor("Stops code", "square-fill"))
-    .prepend(this.playButton = buildAnchor(mac ? "⌘ + Enter" : "Ctrl + Enter", "triangle-right"))
+    .prepend(this.stopButton = buildAnchor("Stops code", "square-fill", "Stop code"))
+    .prepend(this.playButton = buildAnchor("Run code (" + (mac ? "⌘" : "Ctrl") + " + Enter)", "triangle-right", "Run code"))
     .prepend(this.progress = buildProgress());
 
   this.stopButton.hide().tooltip();
