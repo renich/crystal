@@ -184,6 +184,20 @@ struct HTTP::Headers
     values ? concat(values) : nil
   end
 
+  # Merges another `HTTP::Headers` instance into `self`.
+  #
+  # Overwrites any existing headers with the same key.
+  #
+  # ```
+  # require "http/headers"
+  #
+  # h1 = HTTP::Headers{"Foo" => "bar", "Baz" => "qux"}
+  # h2 = HTTP::Headers{"Foo" => "baz", "Qux" => "qox"}
+  # h1.merge!(h2)
+  # h1["Foo"] # => "baz"
+  # h1["Baz"] # => "qux"
+  # h1["Qux"] # => "qox"
+  # ```
   def merge!(other) : self
     other.each do |key, value|
       self[key] = value
