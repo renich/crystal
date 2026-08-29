@@ -78,4 +78,18 @@ describe "Crypto::Bcrypt::Password" do
       (password2y.verify "secret").should be_true
     end
   end
+
+  describe "to_s" do
+    it "writes the raw hash to the IO" do
+      password = Crypto::Bcrypt::Password.new("$2a$08$K8y0i4Wyqyei3SiGHLEd.OweXJt7sno2HdPVrMvVf06kGgAZvPkga")
+      password.to_s.should eq("$2a$08$K8y0i4Wyqyei3SiGHLEd.OweXJt7sno2HdPVrMvVf06kGgAZvPkga")
+    end
+  end
+
+  describe "inspect" do
+    it "writes the raw hash to the IO" do
+      password = Crypto::Bcrypt::Password.new("$2a$08$K8y0i4Wyqyei3SiGHLEd.OweXJt7sno2HdPVrMvVf06kGgAZvPkga")
+      password.inspect.should eq("$2a$08$K8y0i4Wyqyei3SiGHLEd.OweXJt7sno2HdPVrMvVf06kGgAZvPkga")
+    end
+  end
 end
