@@ -189,6 +189,12 @@ module Base64
 
   # Returns the base64-decoded version of *data* as a string.
   # This will decode either the normal or urlsafe alphabets.
+  #
+  # ```
+  # require "base64"
+  #
+  # Base64.decode_string("U2VuZCByZWluZm9yY2VtZW50cw==") # => "Send reinforcements"
+  # ```
   def decode_string(data) : String
     slice = data.to_slice
     String.new(decode_size(slice.size)) do |buf|
