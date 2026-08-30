@@ -523,6 +523,14 @@ describe YAML::Any do
     any2.as_a[0].as_a.should_not be(any.as_a[0].as_a)
   end
 
+  it "#to_yaml" do
+    any = YAML.parse <<-YAML
+      foo: bar
+      baz: [1, 2.3, true, "qux", {"qax": "qox"}]
+      YAML
+    any.to_yaml.should eq("---\nfoo: bar\nbaz:\n- 1\n- 2.3\n- true\n- qux\n- qax: qox\n")
+  end
+
   it "#to_json" do
     any = YAML.parse <<-YAML
       foo: bar
