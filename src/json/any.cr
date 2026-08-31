@@ -130,6 +130,14 @@ struct JSON::Any
 
   # Traverses the depth of a structure and returns the value.
   # Returns `nil` if not found.
+  #
+  # ```
+  # require "json"
+  #
+  # any = JSON.parse(%({"foo": {"bar": [1, 2, 3]}}))
+  # any.dig?("foo", "bar", 1) # => 2
+  # any.dig?("foo", "baz", 1) # => nil
+  # ```
   def dig?(index_or_key : Int | String, *subkeys : Int | String) : JSON::Any?
     self[index_or_key]?.try &.dig?(*subkeys)
   end
@@ -145,6 +153,14 @@ struct JSON::Any
   end
 
   # Traverses the depth of a structure and returns the value, otherwise raises.
+  #
+  # ```
+  # require "json"
+  #
+  # any = JSON.parse(%({"foo": {"bar": [1, 2, 3]}}))
+  # any.dig("foo", "bar", 1) # => 2
+  # any.dig("foo", "baz", 1) # raises KeyError
+  # ```
   def dig(index_or_key : Int | String, *subkeys : Int | String) : JSON::Any
     self[index_or_key].dig(*subkeys)
   end
