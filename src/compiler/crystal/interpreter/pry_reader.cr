@@ -10,6 +10,7 @@ class Crystal::PryReader < Crystal::ReplReader
 
     io.print(@incomplete ? '*' : '>')
     io << ' '
+    io.flush
   end
 
   def continue?(expression : String) : Bool

@@ -56,6 +56,7 @@ class Crystal::ReplReader < Reply::Reader
 
     io.print(@incomplete ? '*' : '>')
     io << ' '
+    io.flush
   end
 
   def highlight(expression : String) : String
